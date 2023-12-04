@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="User.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="box-area">
+        <header>
+            <div class="wrapper">
+                <div class="logo">
+                    <a href="#">Hệ QTCSDL</a>
+                </div>
+                <nav>
+                    <a href="index.html">Table</a> <a href="View.html">View</a> <a href="Procedure.html">Procedure</a>
+                    <a href="Function.html">Function</a> <a href="Trigger.html">Trigger</a><a href="User.html">User</a>
+                </nav>
+            </div>
+        </header>
+        <div class="banner-area">
+            <h2 style="font-style: bold;color: black;">Nhóm 7</h2>
+        </div>
+        <div class="content-area">
+            <div class="wrapper">
+                <h2>CREATE USER AND ROLE</h2>
+                <div class="table-horizontal-container">
+                    <table>
+                        <tr>
+                            <th>Create Querry</th>
+                            <th>Detail</th>
+                        </tr>
+                        <tr>
+                            <td>Tạo và xóa,thay đổi login
+
+                            </td>
+                            <td>
+                                <pre>
+
+-Use [master]
+CREATE LOGIN Nhom7 with PASSWORD = '123456789'
+-DROP LOGIN Nhom7
+-Use [master]
+CREATE LOGIN Nhom7 with PASSWORD = '123456789'
+USE [QuanLyCuaHang]
+CREATE USER Nhom7 FOR LOGIN Nhom7
+USE [QuanLyCuaHang]
+ALTER LOGIN Nhom7 WITH NAME = Nhom7Moi;
+ALTER LOGIN Nhom7Moi WITH PASSWORD = '12345678910' MUST_CHANGE,
+CHECK_EXPIRATION = ON;
+DROP LOGIN Nhom7
+                                </pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Tạo user và xóa,thay đổi user
+                            </td>
+                            <td>
+                                <pre>
+-USE [QuanLyCuaHang]
+CREATE USER Nhom7 FOR LOGIN Nhom7
+-DROP USER IF EXISTS Nhom7
+-ALTER USER Nhom7 WITH NAME = Nhom7Moi;
+DROP USER IF EXISTS Nhom7
+                                </pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Tạo role<br> gán quyền select cho quyền quản lý khách hàng trên bảng KhachHang</td>
+                            <td>
+                                <pre>
+CREATE ROLE QuanLyKhachHang;
+GRANT SELECT ON KhachHang TO QuanLyKhachHang;
+GRANT INSERT ON KhachHang TO QuanLyKhachHang;
+                            </pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Thay đổi role
+                                <br>
+                                Thu hồi quyền SELECT cho quyền QuanLyKhachHang trên bảng KhachHang
+                                <br>
+                                Cấp lại quyền SELECT cho quyền QuanLyKhachHang trên bảng KhachHang
+                            </td>
+                            <td>
+                                <pre>
+-REVOKE SELECT ON KhachHang FROM QuanLyKhachHang;
+-GRANT SELECT,UPDATE ON KhachHang TO QuanLyKhachHang;
+                                </pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Xóa role<br>
+                                Thu hồi tất cả các quyền từ role QuanLySanPham trên bảng KhachHang
+                                <br>
+                                Xóa role QuanLySanPham
+                            </td>
+                            <td>
+                                <pre>
+-REVOKE ALL PRIVILEGES ON KhachHang FROM QuanLyKhachHang;
+-DROP ROLE QuanLyKhachHang;
+                                </pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Gán quyền cho role
+                                <br>
+                                gán quyền để sử dụng toàn bộ tất cả các bảng
+                            </td>
+                            <td>
+                                <pre>
+USE [QuanLyCuaHang]
+CREATE ROLE Nhom7Role;
+USE [QuanLyCuaHang]
+DECLARE @TableName NVARCHAR(128)
+DECLARE table_cursor CURSOR FOR
+SELECT name
+FROM sys.tables
+
+OPEN table_cursor
+FETCH NEXT FROM table_cursor INTO @TableName
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    GRANT SELECT, INSERT, UPDATE, DELETE ON [dbo].[@TableName] TO Nhom7Role
+    FETCH NEXT FROM table_cursor INTO @TableName
+END
+
+CLOSE table_cursor
+DEALLOCATE table_cursor
+
+                                </pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Gán quyền cho user
+                                <br>
+                                TH1 : gán quyền để sử dụng 1 bảng nào đó : ở đây ví dụ là bảng SanPham
+                                <br>
+                                TH2 : gán quyền để sử dụng toàn bộ tất cả các bảng
+                            </td>
+                            <td>
+                                <pre>
+TH1: USE [QuanLyCuaHang]
+GRANT SELECT, INSERT, UPDATE, DELETE ON SanPham TO Nhom7Moi
+
+TH2:USE [QuanLyCuaHang]
+
+DECLARE @TableName2 NVARCHAR(128)
+DECLARE table_cursor2 CURSOR FOR
+SELECT name
+FROM sys.tables
+
+OPEN table_cursor2
+FETCH NEXT FROM table_cursor2 INTO @TableName2
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    GRANT SELECT, INSERT, UPDATE, DELETE ON [dbo].[@TableName2] TO Nhom7Moi
+    FETCH NEXT FROM table_cursor2 INTO @TableName2
+END
+
+CLOSE table_cursor2
+DEALLOCATE table_cursor2
+                                </pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Gán người dùng vào role
+                            </td>
+                            <td>
+                                <pre>
+USE [QuanLyCuaHang]
+GO
+
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = 'Nhom7Role')
+BEGIN
+ALTER ROLE Nhom7Role ADD MEMBER Nhom7Moi;
+END
+                                </pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Thu hồi người dùng khỏi 1 role
+                            </td>
+                            <td>
+                                <pre>
+USE [QuanLyCuaHang]
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = 'Nhom7Moi')
+BEGIN
+ALTER ROLE Nhom7Role DROP MEMBER Nhom7Moi;
+END
+                                </pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Thu hồi quyền trên user
+                                <br>
+                                TH1 : Thu hồi quyền để sử dụng 1 bảng nào đó : ở đây ví dụ là bảng SanPham
+                                <br>
+                                TH2 : Thu hồi tất cả các quyền từ user Nhom7Moi trên bảng SanPham
+                            </td>
+                            <td>
+                                <pre>
+TH1: USE [QuanLyCuaHang]
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = 'Nhom7Moi')
+BEGIN
+
+REVOKE SELECT, INSERT, UPDATE, DELETE ON dbo.SanPham TO Nhom7Moi;
+END
+
+TH2:USE [QuanLyCuaHang]
+GO
+
+DECLARE @TableName3 NVARCHAR(128)
+
+DECLARE table_cursor3 CURSOR FOR
+SELECT name
+FROM sys.tables
+
+OPEN table_cursor3
+
+FETCH NEXT FROM table_cursor3 INTO @TableName3
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    IF OBJECT_ID('[dbo].[@TableName3]') IS NOT NULL
+    BEGIN
+        REVOKE SELECT, INSERT, UPDATE, DELETE ON [dbo].[@TableName3] TO Nhom7Moi
+    END
+
+    FETCH NEXT FROM table_cursor3 INTO @TableName3
+END
+
+CLOSE table_cursor3
+DEALLOCATE table_cursor3
+
+GO
+                                </pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Thu hồi quyền trên role
+                                <br>
+                                TH1 : Thu hồi quyền để sử dụng 1 bảng nào đó : ở đây ví dụ là bảng SanPham
+                                <br>
+                                TH2 : Thu hồi quyền để sử dụng toàn bộ tất cả các bảng
+                            </td>
+                            <td>
+                                <pre>
+TH1: USE [QuanLyCuaHang]
+IF EXISTS (SELECT * FROM sys.database_principals WHERE name = 'Nhom7Role')
+BEGIN
+REVOKE SELECT, INSERT, UPDATE, DELETE ON SanPham FROM Nhom7Role;
+END
+
+TH2:USE [QuanLyCuaHang]
+GO
+
+DECLARE @TableName4 NVARCHAR(128)
+
+DECLARE table_cursor4 CURSOR FOR
+SELECT name
+FROM sys.tables
+
+OPEN table_cursor4
+
+FETCH NEXT FROM table_cursor4 INTO @TableName4
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    IF OBJECT_ID('[dbo].[@TableName3]') IS NOT NULL
+    BEGIN
+        REVOKE SELECT, INSERT, UPDATE, DELETE ON [dbo].[@TableName4] TO Nhom7Role
+    END
+
+    FETCH NEXT FROM table_cursor4 INTO @TableName4
+END
+
+CLOSE table_cursor4
+DEALLOCATE table_cursor4
+
+GO
+                                </pre>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>
